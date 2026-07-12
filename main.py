@@ -44,4 +44,16 @@ def show(body):
 if __name__ == "__main__":
     import sys
 
-    load(URL(sys.argv[1]))
+    if len(sys.argv) < 2:
+        # Interactive mode - 계속 URL 입력 받기
+        while True:
+            url_input = input("\nEnter URL (or 'quit' to exit): ")
+            if url_input.lower() in ["quit", "exit", "q"]:
+                break
+            try:
+                load(URL(url_input))
+            except Exception as e:
+                print(f"Error: {e}")
+    else:
+        # Single URL mode
+        load(URL(sys.argv[1]))
