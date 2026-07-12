@@ -63,13 +63,14 @@ class URL:
         request += self.request_headers
         # 반드시 한번 더 개행을 넣어야 한다.
         request += "\r\n"
-        # print("request is: ", request)
         s.send(request.encode("utf8"))
 
         # 응답
         response = s.makefile("rb")
         statusline = response.readline().decode("utf8")
         version, status, explanation = statusline.split(" ", 2)
+
+        print("version is: ", version)
 
         response_headers = {}
         while True:
@@ -81,19 +82,19 @@ class URL:
             response_headers[header.casefold()] = value.strip()
 
         print("header is: ", response_headers)
-        # assert "transfer-encoding" in response_headers
-        # assert "content-encoding" not in response_headers
-
-        # Content-length bytes 만큼 읽는다.
-        assert (
-            "content-length" in response_headers
-        ), "Content-Length header required for keep-alive"
 
         content_length = int(response_headers["content-length"])
         body = response.read(content_length).decode("utf8")
         print("body is: ", body)
-        # 소켓을 닫지 않고 재사용을 위해 연결 풀에 유지
-        URL.connections[key] = s
+        # 서버가 Connection: close를 보냈는지 확인
+        if response_headers.get("connection") == "close":
+            # 서버가 연결 끊기를 원함
+            s.close()
+        if key in URL.connections:
+            del URL.connections[key]
+        else:
+            # Keep-alive - 소켓을 재사용을 위해 연결 풀에 유지
+            URL.connections[key] = s
         return body
 
     def add_request_header(self, header, value):
