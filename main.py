@@ -14,13 +14,31 @@ def load(url):
 
 def show(body):
     in_tag = False
+    in_entity = False
+    entity = ""
+
     for c in body:
         if c == "<":
             in_tag = True
         elif c == ">":
             in_tag = False
         elif not in_tag:
-            print(c, end="")
+            if c == "&":
+                in_entity = True
+                entity = "&"
+            elif in_entity:
+                entity += c
+                if c == ";":
+                    if entity == "&lt;":
+                        print("<", end="")
+                    elif entity == "&gt;":
+                        print(">", end="")
+                    else:
+                        print(entity, end="")
+                    in_entity = False
+                    entity = ""
+            else:
+                print(c, end="")
 
 
 if __name__ == "__main__":

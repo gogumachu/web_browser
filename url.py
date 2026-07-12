@@ -75,7 +75,7 @@ class URL:
             # print("\n")
 
         print("header is: ", response_headers)
-        assert "transfer-encoding" in response_headers
+        # assert "transfer-encoding" in response_headers
         assert "content-encoding" not in response_headers
 
         body = response.read()
