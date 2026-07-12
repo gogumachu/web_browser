@@ -2,8 +2,14 @@ from url import URL
 
 
 def load(url):
+
     body = url.request()
-    show(body)
+
+    if url.scheme == "file":
+        print("File content:")
+        print(body)
+    else:
+        show(body)
 
 
 def show(body):

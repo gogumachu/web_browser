@@ -1,3 +1,4 @@
+import os
 import socket
 import ssl
 
@@ -6,7 +7,12 @@ class URL:
     def __init__(self, url: str):
         # split 된 결과가 차례로 scheme, url 에 할당된다.
         self.scheme, url = url.split("://", 1)
-        assert self.scheme in ["http", "https"]
+        assert self.scheme in ["http", "https", "file"]
+
+        if self.scheme == "file":
+            self.path = url
+            return
+
         if "/" not in url:
             url = url + "/"
         self.host, url = url.split("/", 1)
@@ -24,6 +30,9 @@ class URL:
             return 80
 
     def request(self):
+        if self.scheme == "file":
+            return self.request_file()
+
         # 소켓 생성
         s = socket.socket(
             family=socket.AF_INET, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
@@ -34,6 +43,7 @@ class URL:
         if self.scheme == "https":
             ctx = ssl.create_default_context()
             s = ctx.wrap_socket(s, server_hostname=self.host)
+
         # 요청
         request = "GET {} HTTP/1.1\r\n".format(self.path)
         self.add_request_header("Host", self.host)
@@ -75,3 +85,13 @@ class URL:
 
     def add_request_header(self, header, value):
         self.request_headers += "{}: {}\r\n".format(header, value)
+
+    def request_file(self):
+        file_path = self.path
+
+        if os.path.isdir(file_path):
+            files = os.listdir(file_path)
+            return "Directory listing for {}:\n".format(file_path) + "\n".join(files)
+        else:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
