@@ -12,6 +12,7 @@ class URL:
         self.host, url = url.split("/", 1)
         self.path = "/" + url
         self.port = self.get_basic_port(self.scheme)
+        self.request_headers = ""
         if ":" in self.host:
             self.host, port = self.host.split(":", 1)
             self.port = int(port)
@@ -34,8 +35,14 @@ class URL:
             ctx = ssl.create_default_context()
             s = ctx.wrap_socket(s, server_hostname=self.host)
         # 요청
-        request = "GET {} HTTP/1.0\r\n".format(self.path)
-        request += "Host: {}\r\n".format(self.host)
+        request = "GET {} HTTP/1.1\r\n".format(self.path)
+        self.add_request_header("Host", self.host)
+        self.add_request_header("Connection", "close")
+        self.add_request_header(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/49.0.2623 Safari/604.1.38 CoherentGT/2.0",
+        )
+        request += self.request_headers
         # 반드시 한번 더 개행을 넣어야 한다.
         request += "\r\n"
         # print("request is: ", request)
@@ -54,10 +61,17 @@ class URL:
             header, value = line.split(":", 1)
             # 헤더는 대소문자 구분을 하지 않으므로 소문자로 변환한다.
             response_headers[header.casefold()] = value.strip()
-            assert "transfer-encoding" not in response_headers
-            assert "content-encoding" not in response_headers
-            # print("header is: ", response_headers)
+
             # print("\n")
+
+        print("header is: ", response_headers)
+        assert "transfer-encoding" in response_headers
+        assert "content-encoding" not in response_headers
+
         body = response.read()
+        print("body is: ", body)
         s.close()
         return body
+
+    def add_request_header(self, header, value):
+        self.request_headers += "{}: {}\r\n".format(header, value)
