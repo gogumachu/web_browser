@@ -9,9 +9,8 @@ def load(url):
         print(body)
     else:
         text = lex(body)
+        Browser().load(text)
 
-    Browser().load(text)
-    
 
 def lex(body):
     # 현재는 태그에 있는 문자는 무시하고 보여준다.
