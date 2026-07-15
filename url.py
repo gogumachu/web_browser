@@ -70,7 +70,7 @@ class URL:
         statusline = response.readline().decode("utf8")
         version, status, explanation = statusline.split(" ", 2)
 
-        print("version is: ", version)
+        print("version, status: ", version, status)
 
         response_headers = {}
         while True:
@@ -83,9 +83,14 @@ class URL:
 
         print("header is: ", response_headers)
 
-        content_length = int(response_headers["content-length"])
-        body = response.read(content_length).decode("utf8")
-        print("body is: ", body)
+        transfer_encoding = response_headers.get("transfer-encoding", "").casefold()
+        if "chunked" in transfer_encoding:
+            body = self._read_chunked_body(response)
+        elif "content-length" in response_headers:
+            content_length = int(response_headers["content-length"])
+            body = response.read(content_length).decode("utf8")
+        else:
+            raise ValueError("Unsupported response: missing both Transfer-Encoding: chunked and Content-Length")
         # 서버가 Connection: close를 보냈는지 확인
         if response_headers.get("connection") == "close":
             # 서버가 연결 끊기를 원함
@@ -99,6 +104,26 @@ class URL:
 
     def add_request_header(self, header, value):
         self.request_headers += "{}: {}\r\n".format(header, value)
+
+    def _read_chunked_body(self, response):
+        chunks = []
+        while True:
+            size_line = response.readline().decode("utf8").strip()
+            if not size_line:
+                continue
+
+            chunk_size = int(size_line.split(";", 1)[0], 16)
+            if chunk_size == 0:
+                # 마지막 청크(0) 이후 trailing CRLF를 소비한다.
+                response.readline()
+                break
+
+            chunk = response.read(chunk_size)
+            chunks.append(chunk)
+            # 각 청크 끝의 CRLF를 소비한다.
+            response.read(2)
+
+        return b"".join(chunks).decode("utf8")
 
     def request_file(self):
         file_path = self.path

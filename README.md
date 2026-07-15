@@ -35,4 +35,10 @@ python main.py file:///C:/Users/eun/Desktop/test.txt
 - Uses Python sockets for network connections
 - SSL/TLS support for HTTPS
 - HTTP/1.1 protocol with Host, Connection, and User-Agent headers
+- Parses response bodies using either `Transfer-Encoding: chunked` or `Content-Length`
+- Keeps TCP connections for reuse when possible (simple keep-alive pool)
 - Simple text renderer that strips HTML tags
+
+## Current Limitation
+
+- If an HTTP response has neither `Transfer-Encoding: chunked` nor `Content-Length`, the client raises an error.

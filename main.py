@@ -1,8 +1,6 @@
 from url import URL
 
-
 def load(url):
-
     body = url.request()
 
     if url.scheme == "file":
@@ -10,12 +8,15 @@ def load(url):
         print(body)
     else:
         show(body)
+    
 
 
 def show(body):
     in_tag = False
     in_entity = False
     entity = ""
+
+    print("\n============Response body============")
 
     for c in body:
         if c == "<":
