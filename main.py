@@ -1,4 +1,5 @@
 from url import URL
+from browser import Browser
 
 def load(url):
     body = url.request()
@@ -7,16 +8,27 @@ def load(url):
         print("File content:")
         print(body)
     else:
-        show(body)
-    
+        text = lex(body)
+        Browser().load(text)
 
+
+def lex(body):
+    # 현재는 태그에 있는 문자는 무시하고 보여준다.
+    in_tag = False
+    text = ""
+    for c in body:
+        if c == "<":
+            in_tag = True
+        elif c == ">":
+            in_tag = False
+        elif not in_tag:
+            text += c
+    return text;
 
 def show(body):
     in_tag = False
     in_entity = False
     entity = ""
-
-    print("\n============Response body============")
 
     for c in body:
         if c == "<":

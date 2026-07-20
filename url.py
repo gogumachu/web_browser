@@ -9,6 +9,22 @@ class URL:
     connections = {}
 
     def __init__(self, url: str):
+        # url 이 about:blank 인 경우는 scheme 과 path 를 따로 분리하지 않고 바로 할당한다.
+        if url == "about:blank":
+            self.set_blank()
+            return
+
+        try:
+            self.url_parse(url)
+        except Exception as e:
+            print("[ERROR] Invalid URL: {} ({})".format(url, e))
+            self.set_blank()
+
+    def set_blank(self):
+        self.scheme = "about"
+        self.path = "blank"
+
+    def url_parse(self, url: str):
         # split 된 결과가 차례로 scheme, url 에 할당된다.
         self.scheme, url = url.split("://", 1)
         assert self.scheme in ["http", "https", "file"]
@@ -34,6 +50,8 @@ class URL:
             return 80
 
     def request(self):
+        if self.scheme == "about":
+            return ""
         if self.scheme == "file":
             return self.request_file()
 
